@@ -58,6 +58,58 @@ pub fn print_markets(markets: &[Market], output: &OutputFormat) -> anyhow::Resul
     Ok(())
 }
 
+#[derive(Tabled)]
+struct TrendingMarketRow {
+    #[tabled(rename = "Question")]
+    question: String,
+    #[tabled(rename = "Price (Yes)")]
+    price_yes: String,
+    #[tabled(rename = "Volume (24h)")]
+    volume_24h: String,
+    #[tabled(rename = "Total Volume")]
+    total_volume: String,
+    #[tabled(rename = "Status")]
+    status: String,
+}
+
+fn market_to_trending_row(m: &Market) -> TrendingMarketRow {
+    let question = m.question.as_deref().unwrap_or(DASH);
+    let price_yes = m
+        .outcome_prices
+        .as_ref()
+        .and_then(|p| p.first())
+        .map_or_else(
+            || DASH.into(),
+            |p| format!("{:.2}¢", p * Decimal::from(100)),
+        );
+
+    TrendingMarketRow {
+        question: truncate(question, 50),
+        price_yes,
+        volume_24h: m.volume_24hr.map_or_else(|| DASH.into(), format_decimal),
+        total_volume: m.volume_num.map_or_else(|| DASH.into(), format_decimal),
+        status: active_status(m.closed, m.active).into(),
+    }
+}
+
+/// Print trending markets with 24h volume highlighted
+pub fn print_trending_markets(markets: &[Market], output: &OutputFormat) -> anyhow::Result<()> {
+    match output {
+        OutputFormat::Table => {
+            if markets.is_empty() {
+                println!("No trending markets found.");
+                return Ok(());
+            }
+            let rows: Vec<TrendingMarketRow> = markets.iter().map(market_to_trending_row).collect();
+            let table = Table::new(rows).with(Style::rounded()).to_string();
+            println!("🔥 Trending Markets (by 24h Volume)\n");
+            println!("{table}");
+        }
+        OutputFormat::Json => print_json(markets)?,
+    }
+    Ok(())
+}
+
 pub fn print_market(m: &Market, output: &OutputFormat) -> anyhow::Result<()> {
     if matches!(output, OutputFormat::Json) {
         return print_json(m);
