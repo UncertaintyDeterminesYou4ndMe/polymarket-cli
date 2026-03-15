@@ -140,6 +140,14 @@ polymarket markets list --limit 10
 polymarket markets list --active true --order volume_num
 polymarket markets list --closed false --limit 50 --offset 25
 
+# Filter by tag and minimum volume
+polymarket markets list --tag politics --min-volume 100000 --active true
+polymarket markets list --tag crypto --order volume_num --limit 20
+
+# Trending markets (by 24h volume)
+polymarket markets trending --limit 10
+polymarket markets trending --tag politics --min-volume-24h 50000
+
 # Get a single market by ID or slug
 polymarket markets get 12345
 polymarket markets get will-trump-win
@@ -151,7 +159,9 @@ polymarket markets search "bitcoin" --limit 5
 polymarket markets tags 12345
 ```
 
-**Flags for `markets list`**: `--limit`, `--offset`, `--order`, `--ascending`, `--active`, `--closed`
+**Flags for `markets list`**: `--limit`, `--offset`, `--order`, `--ascending`, `--active`, `--closed`, `--tag`, `--min-volume`
+
+**Flags for `markets trending`**: `--limit`, `--tag`, `--min-volume-24h`
 
 ### Events
 
@@ -171,6 +181,8 @@ polymarket events tags 500
 ```bash
 # Tags
 polymarket tags list
+polymarket tags list --with-stats --limit 20  # Show market count & volume
+polymarket tags popular --limit 10             # Sort by total volume
 polymarket tags get politics
 polymarket tags related politics
 polymarket tags related-tags politics
